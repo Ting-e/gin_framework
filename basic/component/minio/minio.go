@@ -1,11 +1,3 @@
-/*
- * @Author: your name
- * @Date: 2021-10-26 16:35:39
- * @LastEditTime: 2021-10-26 16:52:14
- * @LastEditors: Please set LastEditors
- * @Description: In User Settings Edit
- * @FilePath: \microservice\basic\component\minio\minio.go
- */
 package minio
 
 import (
