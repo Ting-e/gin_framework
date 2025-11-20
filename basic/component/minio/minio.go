@@ -1,0 +1,103 @@
+/*
+ * @Author: your name
+ * @Date: 2021-10-26 16:35:39
+ * @LastEditTime: 2021-10-26 16:52:14
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \microservice\basic\component\minio\minio.go
+ */
+package minio
+
+import (
+	"project/basic/config"
+	"project/basic/logger"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+)
+
+var minioEntity *Minio
+
+type Minio struct {
+	//组件名称
+	name string
+	//地址
+	endpoint string
+	//账号
+	accessKeyID string
+	//密码
+	secretAccessKey string
+	//是否使用https
+	source bool
+	//是否初始化
+	isInit bool
+	//minio链接
+	minioClient *minio.Client
+}
+
+func newMinio() *Minio {
+	return &Minio{
+		name:            "minio",
+		isInit:          false,
+		endpoint:        config.AppConfig.Minio.Endpoint,
+		accessKeyID:     config.AppConfig.Minio.AccessKey,
+		secretAccessKey: config.AppConfig.Minio.SecretKey,
+		source:          config.AppConfig.Minio.Source,
+	}
+}
+
+func GetMinio() *Minio {
+
+	if minioEntity != nil {
+		return minioEntity
+	}
+
+	logger.Sugar.Infof("\t\t[component] minio is initiating...")
+
+	//判断配置文件是否加载成功
+	if config.AppConfig == nil || config.AppConfig.Minio == nil {
+		logger.Sugar.Errorf("\t[component] minio config load failed")
+		return nil
+	}
+
+	minioEntity = newMinio()
+
+	return minioEntity
+}
+
+func (e *Minio) GetClient() *minio.Client {
+	return e.minioClient
+}
+
+func (e *Minio) GetName() string {
+	return e.name
+}
+
+func (e *Minio) InitComponent() bool {
+
+	if e.isInit {
+		logger.Sugar.Infof("\t[component] %s is inited", e.name)
+		return true
+	}
+
+	var err error
+
+	//初始化
+	e.minioClient, err = minio.New(e.endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(e.accessKeyID, e.secretAccessKey, ""),
+		Secure: e.source,
+	})
+	if err != nil {
+		logger.Sugar.Infof("\t\t[component] %s init failed: %s", e.name, err)
+		return false
+	}
+
+	e.isInit = true
+
+	logger.Sugar.Infof("\t\t[component] %s init success", e.name)
+	return true
+}
+
+func (e *Minio) IsInitialize() bool {
+	return e.isInit
+}
