@@ -8,8 +8,11 @@
 
 <h3 id="mqbE7">1. 克隆项目</h3>
 
+```bash
 git clone https://github.com/Ting-e/gin_framework.git
 cd project
+```
+
 
 <h3 id="UBpsU">2. 安装依赖</h3>
 
