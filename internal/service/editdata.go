@@ -6,29 +6,20 @@ import (
 	mysqldb "project/pkg/database"
 )
 
-func (s *Service) GetDatas(req model.GetDatasReq) *model.GetDatasResp {
-	res := new(model.GetDatasResp)
+func (s *Service) EditData(req model.EditDataReq) (res model.EditDataResp) {
 	res.Code = 500
 	res.Mess = "内部服务出错"
 	db := mysqldb.GetMysql().GetDb()
 
-	datas, total, err := repository.GetData(db, req)
+	err := repository.EditData(db, req)
 	if err != nil {
 		res.Code = 400
-		res.Mess = "获取失败"
-		return res
-	}
-
-	if len(datas) == 0 {
-		res.Code = 204
-		res.Mess = "暂无数据"
+		res.Mess = "删除失败"
 		return res
 	}
 
 	res.Code = 200
 	res.Mess = "成功"
-	res.Total = total
-	res.Datas = datas
 	return res
 
 }

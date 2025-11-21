@@ -1,11 +1,3 @@
-/*
- * @Author: 廷益 15137125570@163.com
- * @Date: 2025-05-09 15:18:13
- * @LastEditors: 廷益 15137125570@163.com
- * @LastEditTime: 2025-11-21 11:55:00
- * @FilePath: /cmd/api/main.go
- * @Description: API 服务主入口
- */
 package main
 
 import (
