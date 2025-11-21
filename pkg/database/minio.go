@@ -1,8 +1,8 @@
-package minio
+package database
 
 import (
-	"project/basic/config"
-	"project/basic/logger"
+	"project/pkg/config"
+	"project/pkg/logger"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"

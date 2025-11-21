@@ -1,6 +1,6 @@
 package api
 
-import "project/web/handler/model"
+import "project/internal/model"
 
 type APIService interface {
 

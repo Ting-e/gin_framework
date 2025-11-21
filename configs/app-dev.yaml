@@ -49,3 +49,9 @@ public:
 # 调试配置
 debug:
   enablePProf: false
+
+# 定义启用的组件列表
+components:
+  - mysql
+  # - redis
+  # - minio

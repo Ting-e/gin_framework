@@ -1,9 +1,9 @@
-package tdenginedb
+package database
 
 import (
 	"database/sql"
-	"project/basic/config"
-	"project/basic/logger"
+	"project/pkg/config"
+	"project/pkg/logger"
 )
 
 var tdengineEntity *Tdengine

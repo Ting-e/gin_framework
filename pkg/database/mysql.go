@@ -1,9 +1,9 @@
-package mysqldb
+package database
 
 import (
 	"database/sql"
-	"project/basic/config"
-	"project/basic/logger"
+	"project/pkg/config"
+	"project/pkg/logger"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -63,8 +63,6 @@ func (m *Mysql) InitComponent() bool {
 		return true
 	}
 
-	logger.Sugar.Infof("[component] %s is initiating...", m.name)
-
 	var err error
 	m.dB, err = sql.Open("mysql", m.url)
 	if err != nil {
@@ -85,8 +83,6 @@ func (m *Mysql) InitComponent() bool {
 
 	//将初始化设置为true
 	m.isInit = true
-
-	logger.Sugar.Infof("[component] %s init success", m.name)
 
 	return true
 }

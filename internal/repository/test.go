@@ -1,9 +1,9 @@
-package dao
+package repository
 
 import (
 	"database/sql"
-	"project/basic/logger"
-	"project/web/handler/model"
+	"project/internal/model"
+	"project/pkg/logger"
 	"strings"
 	"time"
 )

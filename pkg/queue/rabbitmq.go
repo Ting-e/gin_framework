@@ -1,8 +1,8 @@
-package tdenginedb
+package queue
 
 import (
-	"project/basic/config"
-	"project/basic/logger"
+	"project/pkg/config"
+	"project/pkg/logger"
 
 	"github.com/streadway/amqp"
 )

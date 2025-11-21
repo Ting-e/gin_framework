@@ -9,13 +9,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"project/public/tools/snowflake"
+	"project/pkg/utils/snowflake"
 
-	"project/web/handler/model"
+	"project/internal/model"
 
 	"os"
-	local_config "project/basic/config"
-	"project/basic/logger"
+	local_config "project/pkg/config"
+	"project/pkg/logger"
 	"strconv"
 	"time"
 

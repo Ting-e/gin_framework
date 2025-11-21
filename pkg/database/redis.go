@@ -1,9 +1,9 @@
-package redisdb
+package database
 
 import (
 	"context"
-	"project/basic/config"
-	"project/basic/logger"
+	"project/pkg/config"
+	"project/pkg/logger"
 
 	"github.com/go-redis/redis/v8"
 )

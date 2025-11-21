@@ -18,13 +18,14 @@ var (
 
 // App 是顶层配置结构。
 type App struct {
-	Server   *Server   `mapstructure:"server"`
-	Db       *Db       `mapstructure:"db"`
-	Log      *Log      `mapstructure:"log"`
-	Minio    *Minio    `mapstructure:"minio"`
-	RabbitMQ *RabbitMQ `mapstructure:"rabbitmq"`
-	Public   *Public   `mapstructure:"public"`
-	Debug    *Debug    `mapstructure:"debug"`
+	Server     *Server   `mapstructure:"server"`
+	Db         *Db       `mapstructure:"db"`
+	Log        *Log      `mapstructure:"log"`
+	Minio      *Minio    `mapstructure:"minio"`
+	RabbitMQ   *RabbitMQ `mapstructure:"rabbitmq"`
+	Public     *Public   `mapstructure:"public"`
+	Debug      *Debug    `mapstructure:"debug"`
+	Components []string  `mapstructure:"components"`
 }
 
 // Server 配置。
@@ -235,6 +236,12 @@ func (a *App) Validate() error {
 	if a.Log != nil {
 		if err := a.Log.Validate(); err != nil {
 			return fmt.Errorf("log config: %w", err)
+		}
+	}
+
+	if a.Components != nil {
+		if len(a.Components) <= 0 {
+			return fmt.Errorf("components config: can`t null")
 		}
 	}
 

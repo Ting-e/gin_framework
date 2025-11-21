@@ -2,7 +2,7 @@ package logger
 
 import (
 	"os"
-	"project/basic/config"
+	"project/pkg/config"
 	"time"
 
 	"go.uber.org/zap"

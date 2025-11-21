@@ -1,9 +1,9 @@
 package service
 
 import (
-	mysqldb "project/basic/component/mysql"
-	"project/web/handler/dao"
-	"project/web/handler/model"
+	"project/internal/model"
+	"project/internal/repository"
+	mysqldb "project/pkg/database"
 )
 
 func (s *Service) GetDatas(req model.GetDatasReq) *model.GetDatasResp {
@@ -12,7 +12,7 @@ func (s *Service) GetDatas(req model.GetDatasReq) *model.GetDatasResp {
 	res.Mess = "内部服务出错"
 	db := mysqldb.GetMysql().GetDb()
 
-	datas, total, err := dao.GetData(db, req)
+	datas, total, err := repository.GetData(db, req)
 	if err != nil {
 		res.Code = 400
 		res.Mess = "获取失败"

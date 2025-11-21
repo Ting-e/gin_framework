@@ -1,12 +1,12 @@
-package controller
+package handler
 
 import (
 	"encoding/json"
 	"net/http"
 	"project/api"
-	"project/basic/logger"
-	"project/web/handler/model"
-	srv "project/web/handler/service"
+	"project/internal/model"
+	srv "project/internal/service"
+	"project/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
