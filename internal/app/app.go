@@ -41,20 +41,24 @@ type DefaultApp struct {
 }
 
 // InitApp 初始化应用
-func InitApp(configPath string, logPath string) (App, error) {
+func InitApp() (App, error) {
+
+	// 加载配置路径和日志路径
+	opts := LoadConfig()
+
 	// 参数验证
-	if configPath == "" {
+	if opts.ConfigPath == "" {
 		return nil, fmt.Errorf("config path is required")
 	}
-	if logPath == "" {
+	if opts.LogPath == "" {
 		return nil, fmt.Errorf("log path is required")
 	}
 
 	// 验证日志目录
-	if _, err := os.Stat(logPath); err != nil {
+	if _, err := os.Stat(opts.LogPath); err != nil {
 		if os.IsNotExist(err) {
 			// 尝试创建日志目录
-			if err := os.MkdirAll(logPath, 0755); err != nil {
+			if err := os.MkdirAll(opts.LogPath, 0755); err != nil {
 				return nil, fmt.Errorf("failed to create log directory: %w", err)
 			}
 		} else {
@@ -63,20 +67,20 @@ func InitApp(configPath string, logPath string) (App, error) {
 	}
 
 	// 加载配置
-	if err := config.Init(configPath); err != nil {
+	if err := config.Init(opts.ConfigPath); err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
 	appConfig := config.Get()
 
 	// 初始化日志
-	logger.InitLogger(logPath)
+	logger.InitLogger(opts.LogPath, appConfig.Log.Level)
 
 	app := &DefaultApp{
 		name:       appConfig.Server.Name,
 		port:       appConfig.Server.Port,
 		version:    appConfig.Server.Version,
-		configPath: configPath,
+		configPath: opts.ConfigPath,
 	}
 
 	app.SetComponent(appConfig.Components)
@@ -86,8 +90,8 @@ func InitApp(configPath string, logPath string) (App, error) {
 	fmt.Println()
 
 	// 打印启动信息
-	logger.Sugar.Infof("[app] using config file: %s", configPath)
-	logger.Sugar.Infof("[app] using log directory: %s", logPath)
+	logger.Sugar.Infof("[app] using config file: %s", opts.ConfigPath)
+	logger.Sugar.Infof("[app] using log directory: %s", opts.LogPath)
 	logger.Sugar.Info("[app] logger initialized successfully")
 	logger.Sugar.Infof("[app] %s initialized successfully, version: %s", app.name, app.version)
 
@@ -95,8 +99,8 @@ func InitApp(configPath string, logPath string) (App, error) {
 }
 
 // MustInitApp 初始化应用，失败时 panic
-func MustInitApp(configPath string, logPath string) App {
-	app, err := InitApp(configPath, logPath)
+func MustInitApp() App {
+	app, err := InitApp()
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize app: %v", err))
 	}

@@ -44,8 +44,14 @@ minio:
 
 # 公共配置
 public:
-  ip: "http://127.0.0.1"   
+  ip: "http://127.0.0.1"    
 
 # 调试配置
 debug:
   enablePProf: false
+
+# 定义启用的组件列表
+components:
+  - mysql
+  # - redis
+  # - minio

@@ -1,0 +1,6 @@
+.git
+.idea
+log/
+test/
+*.log
+go.sum

@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"project/api"
 	"project/internal/model"
 	srv "project/internal/service"
 	"project/pkg/logger"
@@ -11,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var service api.APIService
+var service srv.APIService
 
 func init() {
 	service = srv.GetService()
