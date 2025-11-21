@@ -56,17 +56,11 @@ go run cmd/server/main.go
 ---
 
 <h2 id="eKAHz">🐳 Docker 部署（可选）</h2>
-1. 构建镜像：
+
+构建镜像：
+
 
 ```bash
 docker build -t project-backend .
-```
-
-2. 运行容器：
-
-```bash
-docker run -p 8080:8080 
-  -v $(pwd)/configs:/app/configs 
-    project-backend
 ```
 
