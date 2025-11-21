@@ -1,48 +1,25 @@
 <h1 id="DvdnZ">GIN_</h1>
 一个基于 Go + Gin 的后端服务，提供标准的分层架构与常用基础设施封装。
 
-<h2 id="ulMZG">📁 项目结构</h2>
-```plain
-project/
-├── api/                    # API 接口定义（业务服务接口）
-├── cmd/
-│   └── server/             # 服务启动入口
-├── configs/                # 配置文件（YAML）
-├── internal/
-│   ├── handler/            # HTTP 请求处理器（Controller）
-│   ├── model/              # 数据模型 & API 响应结构
-│   ├── service/            # 业务逻辑实现
-│   └── ...                 # （可扩展 repository/middleware 等）
-├── pkg/
-│   ├── config/             # 配置加载
-│   ├── logger/             # 日志组件（Zap）
-│   └── utils/              # 工具类（如 Snowflake ID）
-└── go.mod
-```
-
 <h2 id="EdLn9">⚙️ 快速启动</h2>
 <h3 id="VEysM">前提条件</h3>
 + Go 1.19+
-+ Redis（用于部分功能）
-+ MinIO 或兼容 S3 的对象存储（如需文件上传）
 
 <h3 id="mqbE7">1. 克隆项目</h3>
-```bash
+
 git clone https://github.com/Ting-e/gin_framework.git
 cd project
-```
 
 <h3 id="UBpsU">2. 安装依赖</h3>
-```bash
+
 go mod tidy
-```
+
 
 <h3 id="SZjam">3. 配置环境</h3>
+
 复制配置模板并按需修改：
 
-```bash
 cp configs/app-dev.yaml.example configs/app-dev.yaml
-```
 
 关键配置项说明（configs/app-dev.yaml）：
 
@@ -107,40 +84,10 @@ components:
 ```
 
 <h3 id="gZ4aK">4. 启动服务</h3>
-```bash
+
 go run cmd/server/main.go
-```
 
 服务默认运行在 [http://localhost:8080](http://localhost:8080)
-
----
-
-<h2 id="OJwvX">🧪 示例接口</h2>
-<h3 id="OIffD">获取数据</h3>
-POST /api/data  
-Content-Type: application/json
-
-{  
-    "param1": "value1",  
-    "param2": "value2"  
-}
-
-成功响应：  
-{  
-    "code": 200,  
-    "message": "success",  
-    "data": {  
-        // 业务数据  
-    }  
-}
-
-错误响应：  
-{  
-    "code": 400,  
-    "message": "参数解析出错"  
-}
-
----
 
 <h2 id="DwJ9l">🛠 核心功能</h2>
 + ✅ 标准化分层：Handler → Service → Repository
