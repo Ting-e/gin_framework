@@ -18,8 +18,8 @@ func init() {
 }
 
 func GetData(c *gin.Context) {
-	var body *model.GetDatasReq
-	err := c.ShouldBindJSON(&body)
+	var body model.GetDatasReq
+	err := c.ShouldBind(&body)
 	if err != nil {
 		logger.Sugar.Error("[controller] GetDatas: parse data error: ", err)
 		c.JSON(http.StatusBadRequest, model.Response{Code: http.StatusBadRequest, Message: "参数解析出错"})

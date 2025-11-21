@@ -47,10 +47,12 @@ func init() {
 // 连接redis
 func ConnectRedis(db int) (*redis.Client, error) {
 
+	cfg := local_config.Get()
+
 	rdb := redis.NewClient(&redis.Options{
 		// Addr: "localhost:63794",
-		Addr:     local_config.AppConfig.Db.Redis.Addr,
-		Password: local_config.AppConfig.Db.Redis.Password,
+		Addr:     cfg.Db.Redis.Addr,
+		Password: cfg.Db.Redis.Password,
 		DB:       db,
 	})
 
@@ -147,12 +149,13 @@ func UplodaLocalFile(filePath string) error {
 	Key := "testFloder/" + s + ".xlsx"
 
 	ctx := context.Background()
+	local_cfg := local_config.Get()
 
 	// 初始化上传凭证
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(local_config.AppConfig.Minio.AccessKey, local_config.AppConfig.Minio.SecretKey, "")),
-		config.WithRegion(local_config.AppConfig.Minio.Region),
-		config.WithBaseEndpoint(local_config.AppConfig.Minio.Endpoint),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(local_cfg.Minio.AccessKey, local_cfg.Minio.SecretKey, "")),
+		config.WithRegion(local_cfg.Minio.Region),
+		config.WithBaseEndpoint(local_cfg.Minio.Endpoint),
 	)
 	if err != nil {
 		logger.Sugar.Error(err)
@@ -165,7 +168,7 @@ func UplodaLocalFile(filePath string) error {
 
 	// 上传
 	_, err = client.PutObject(context.Background(), &s3.PutObjectInput{
-		Bucket: aws.String(local_config.AppConfig.Minio.BucketName),
+		Bucket: aws.String(local_cfg.Minio.BucketName),
 		Key:    aws.String(Key),
 		Body:   file,
 	})
@@ -193,11 +196,12 @@ func PresignPutObjectUrl(filePath string) (string, error) {
 	key := "testFloder/" + s + ".xlsx"
 
 	ctx := context.Background()
+	local_cfg := local_config.Get()
 
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(local_config.AppConfig.Minio.AccessKey, local_config.AppConfig.Minio.SecretKey, "")),
-		config.WithRegion(local_config.AppConfig.Minio.Region),
-		config.WithBaseEndpoint("https://"+local_config.AppConfig.Minio.Endpoint),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(local_cfg.Minio.AccessKey, local_cfg.Minio.SecretKey, "")),
+		config.WithRegion(local_cfg.Minio.Region),
+		config.WithBaseEndpoint("https://"+local_cfg.Minio.Endpoint),
 	)
 	if err != nil {
 		logger.Sugar.Error(err)
@@ -211,7 +215,7 @@ func PresignPutObjectUrl(filePath string) (string, error) {
 	presignClient := s3.NewPresignClient(client)
 
 	response, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(local_config.AppConfig.Minio.BucketName),
+		Bucket: aws.String(local_cfg.Minio.BucketName),
 		Key:    aws.String(key),
 	}, func(opts *s3.PresignOptions) {
 		opts.Expires = time.Duration(1000 * int64(time.Second))

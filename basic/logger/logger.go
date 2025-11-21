@@ -16,7 +16,7 @@ var Sugar *zap.SugaredLogger
 func InitLogger(log string) {
 
 	w := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   config.GetConfig().Log.Path + time.Now().Format("2006-01-02") + ".log",
+		Filename:   config.Get().Log.Path + time.Now().Format("2006-01-02") + ".log",
 		MaxSize:    500,
 		MaxBackups: 3,
 		MaxAge:     28,
@@ -25,7 +25,7 @@ func InitLogger(log string) {
 	// 判断配置文件配置的日志等级
 	var zapLevel zapcore.Level
 
-	switch config.GetConfig().Log.Level {
+	switch config.Get().Log.Level {
 	case "debug":
 		zapLevel = zap.DebugLevel
 	case "info":

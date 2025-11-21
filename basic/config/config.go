@@ -1,93 +1,394 @@
+// Package config 提供应用配置管理。
 package config
 
 import (
-	"os"
+	"errors"
+	"fmt"
+	"strings"
+	"sync"
 
-	"gopkg.in/yaml.v3"
+	"github.com/spf13/viper"
 )
 
-var AppConfig *App
+var (
+	appConfig *App
+	once      sync.Once
+	initErr   error
+)
 
+// App 是顶层配置结构。
 type App struct {
-	Server   *Server   `yaml:"server"`
-	Db       *Db       `yaml:"db"`
-	Log      *Log      `yaml:"log"`
-	Minio    *Minio    `yaml:"minio"`
-	RabbitMQ *RabbitMQ `yaml:"rabbitmq"`
-	Public   *Public   `yaml:"public"`
-	Debug    *Debug    `yaml:"debug"`
+	Server   *Server   `mapstructure:"server"`
+	Db       *Db       `mapstructure:"db"`
+	Log      *Log      `mapstructure:"log"`
+	Minio    *Minio    `mapstructure:"minio"`
+	RabbitMQ *RabbitMQ `mapstructure:"rabbitmq"`
+	Public   *Public   `mapstructure:"public"`
+	Debug    *Debug    `mapstructure:"debug"`
 }
 
+// Server 配置。
 type Server struct {
-	Name    string `yaml:"name"`
-	Port    int    `yaml:"port"`
-	Version string `yaml:"version"`
+	Name    string `mapstructure:"name"`
+	Port    int    `mapstructure:"port"`
+	Version string `mapstructure:"version"`
 }
 
+// Db 数据库配置。
 type Db struct {
-	Mysql    *Mysql    `yaml:"mysql"`
-	Redis    *Redis    `yaml:"redis"`
-	Tdengine *Tdengine `yaml:"tdengine"`
+	Mysql    *Mysql    `mapstructure:"mysql"`
+	Redis    *Redis    `mapstructure:"redis"`
+	Tdengine *Tdengine `mapstructure:"tdengine"`
 }
 
+// Log 日志配置。
 type Log struct {
-	Path       string `yaml:"path"`
-	Level      string `yaml:"level"`
-	MaxSize    int    `yaml:"maxSize"`
-	MaxBackups int    `yaml:"maxBackups"`
-	MaxAge     int    `yaml:"maxAge"`
+	Path       string `mapstructure:"path"`
+	Level      string `mapstructure:"level"`
+	MaxSize    int    `mapstructure:"maxSize"`    // MB
+	MaxBackups int    `mapstructure:"maxBackups"` // 文件数
+	MaxAge     int    `mapstructure:"maxAge"`     // 天
 }
 
+// Mysql 配置。
 type Mysql struct {
-	Url               string `yaml:"url"`
-	MaxIdleConnection int    `yaml:"maxIdleConnection"`
-	MaxOpenConnection int    `yaml:"maxOpenConnection"`
+	URL               string `mapstructure:"url"`
+	MaxIdleConnection int    `mapstructure:"maxIdleConnection"`
+	MaxOpenConnection int    `mapstructure:"maxOpenConnection"`
 }
 
+// Minio 配置。
 type Minio struct {
-	AccessKey  string `yaml:"accessKey"`
-	SecretKey  string `yaml:"secretKey"`
-	BucketName string `yaml:"bucketName"`
-	Endpoint   string `yaml:"endpoint"`
-	Source     bool   `yaml:"source"`
-	Region     string `yaml:"region"`
+	AccessKey  string `mapstructure:"accessKey"`
+	SecretKey  string `mapstructure:"secretKey"`
+	BucketName string `mapstructure:"bucketName"`
+	Endpoint   string `mapstructure:"endpoint"`
+	Source     bool   `mapstructure:"source"`
+	Region     string `mapstructure:"region"`
 }
 
+// Redis 配置。
 type Redis struct {
-	DB       int    `yaml:"db"`
-	Addr     string `yaml:"addr"`
-	Network  string `yaml:"network"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	DB       int    `mapstructure:"db"`
+	Addr     string `mapstructure:"addr"`
+	Network  string `mapstructure:"network"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
 }
 
+// Tdengine 配置。
 type Tdengine struct {
-	Url string `yaml:"url"`
+	URL string `mapstructure:"url"`
 }
 
+// Public 公共配置。
 type Public struct {
-	Ip string `yaml:"ip"`
+	IP string `mapstructure:"ip"`
 }
 
+// Debug 调试配置。
 type Debug struct {
-	EnablePProf bool `yaml:"enablePProf"`
+	EnablePProf bool `mapstructure:"enablePProf"`
 }
 
+// RabbitMQ 配置。
 type RabbitMQ struct {
-	Url string `yaml:"url"`
+	URL string `mapstructure:"url"`
 }
 
-func GetConfig() *App {
-	return AppConfig
+// Get 返回当前加载的配置（只读）。
+// 必须先调用 Init。
+func Get() *App {
+	if appConfig == nil {
+		panic("config not initialized; call config.Init() first")
+	}
+	return appConfig
 }
 
-// 读取配置文件
-func InitConfig(path string) {
+// MustGet 返回配置，如果未初始化则 panic。
+func MustGet() *App {
+	return Get()
+}
 
-	configFile, err := os.ReadFile(path)
-	if err != nil {
-		panic("配置文件无效：" + err.Error())
+// IsInitialized 检查配置是否已初始化。
+func IsInitialized() bool {
+	return appConfig != nil
+}
+
+// SafeCopy 返回脱敏后的配置副本，用于日志或调试。
+func (a *App) SafeCopy() *App {
+	if a == nil {
+		return nil
 	}
 
-	_ = yaml.Unmarshal(configFile, &AppConfig)
+	cp := *a
+
+	// 深拷贝嵌套结构
+	if a.Server != nil {
+		server := *a.Server
+		cp.Server = &server
+	}
+
+	if a.Db != nil {
+		db := *a.Db
+		cp.Db = &db
+
+		if a.Db.Redis != nil {
+			redis := *a.Db.Redis
+			redis.Password = "***REDACTED***"
+			cp.Db.Redis = &redis
+		}
+
+		if a.Db.Mysql != nil {
+			mysql := *a.Db.Mysql
+			mysql.URL = redactDSN(mysql.URL)
+			cp.Db.Mysql = &mysql
+		}
+
+		if a.Db.Tdengine != nil {
+			td := *a.Db.Tdengine
+			td.URL = redactDSN(td.URL)
+			cp.Db.Tdengine = &td
+		}
+	}
+
+	if a.Minio != nil {
+		minio := *a.Minio
+		minio.SecretKey = "***REDACTED***"
+		minio.AccessKey = redactKey(minio.AccessKey)
+		cp.Minio = &minio
+	}
+
+	if a.RabbitMQ != nil {
+		rmq := *a.RabbitMQ
+		rmq.URL = redactDSN(rmq.URL)
+		cp.RabbitMQ = &rmq
+	}
+
+	if a.Log != nil {
+		log := *a.Log
+		cp.Log = &log
+	}
+
+	if a.Public != nil {
+		public := *a.Public
+		cp.Public = &public
+	}
+
+	if a.Debug != nil {
+		debug := *a.Debug
+		cp.Debug = &debug
+	}
+
+	return &cp
+}
+
+// redactDSN 脱敏 DSN 字符串中的密码部分。
+func redactDSN(dsn string) string {
+	if dsn == "" {
+		return ""
+	}
+
+	// 简单处理：查找 ":" 和 "@" 之间的内容
+	if idx1 := strings.Index(dsn, "://"); idx1 != -1 {
+		rest := dsn[idx1+3:]
+		if idx2 := strings.Index(rest, ":"); idx2 != -1 {
+			if idx3 := strings.Index(rest[idx2:], "@"); idx3 != -1 {
+				return dsn[:idx1+3+idx2+1] + "***REDACTED***" + rest[idx2+idx3:]
+			}
+		}
+	}
+
+	return dsn
+}
+
+// redactKey 部分脱敏 key（显示前后几位）。
+func redactKey(key string) string {
+	if len(key) <= 8 {
+		return "***REDACTED***"
+	}
+	return key[:4] + "***" + key[len(key)-4:]
+}
+
+// Validate 验证必要配置项是否有效。
+func (a *App) Validate() error {
+	if a.Server == nil {
+		return errors.New("missing 'server' section")
+	}
+
+	if err := a.Server.Validate(); err != nil {
+		return fmt.Errorf("server config: %w", err)
+	}
+
+	if a.Db != nil {
+		if err := a.Db.Validate(); err != nil {
+			return fmt.Errorf("db config: %w", err)
+		}
+	}
+
+	if a.Minio != nil {
+		if err := a.Minio.Validate(); err != nil {
+			return fmt.Errorf("minio config: %w", err)
+		}
+	}
+
+	if a.Log != nil {
+		if err := a.Log.Validate(); err != nil {
+			return fmt.Errorf("log config: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// Validate 验证 Server 配置。
+func (s *Server) Validate() error {
+	if s.Port <= 0 || s.Port > 65535 {
+		return fmt.Errorf("invalid port: %d (must be 1-65535)", s.Port)
+	}
+	if s.Name == "" {
+		return errors.New("server name is required")
+	}
+	return nil
+}
+
+// Validate 验证 Db 配置。
+func (d *Db) Validate() error {
+	if d.Mysql != nil {
+		if d.Mysql.URL == "" {
+			return errors.New("mysql.url is required")
+		}
+		if d.Mysql.MaxIdleConnection < 0 {
+			return errors.New("mysql.maxIdleConnection must be >= 0")
+		}
+		if d.Mysql.MaxOpenConnection <= 0 {
+			return errors.New("mysql.maxOpenConnection must be > 0")
+		}
+	}
+
+	if d.Redis != nil && d.Redis.Addr == "" {
+		return errors.New("redis.addr is required")
+	}
+
+	if d.Tdengine != nil && d.Tdengine.URL == "" {
+		return errors.New("tdengine.url is required")
+	}
+
+	return nil
+}
+
+// Validate 验证 Minio 配置。
+func (m *Minio) Validate() error {
+	if m.AccessKey == "" {
+		return errors.New("accessKey is required")
+	}
+	if m.SecretKey == "" {
+		return errors.New("secretKey is required")
+	}
+	if m.BucketName == "" {
+		return errors.New("bucketName is required")
+	}
+	if m.Endpoint == "" {
+		return errors.New("endpoint is required")
+	}
+	return nil
+}
+
+// Validate 验证 Log 配置。
+func (l *Log) Validate() error {
+	validLevels := map[string]bool{
+		"debug": true, "info": true, "warn": true, "error": true, "fatal": true,
+	}
+	if !validLevels[strings.ToLower(l.Level)] {
+		return fmt.Errorf("invalid log level: %s (must be debug/info/warn/error/fatal)", l.Level)
+	}
+	if l.MaxSize <= 0 {
+		return errors.New("maxSize must be > 0")
+	}
+	if l.MaxBackups < 0 {
+		return errors.New("maxBackups must be >= 0")
+	}
+	if l.MaxAge < 0 {
+		return errors.New("maxAge must be >= 0")
+	}
+	return nil
+}
+
+// Init 从指定路径加载配置文件，并支持环境变量覆盖。
+// 环境变量命名规则：APP_ 前缀 + 大写 + 下划线，例如 APP_SERVER_PORT。
+func Init(configPath string) error {
+	once.Do(func() {
+		v := viper.New()
+		v.SetConfigFile(configPath)
+		v.SetConfigType("yaml")
+
+		// 设置环境变量前缀和替换规则
+		v.SetEnvPrefix("APP")
+		v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+		v.AutomaticEnv()
+
+		// 设置默认值
+		setViperDefaults(v)
+
+		// 读取配置文件
+		if err := v.ReadInConfig(); err != nil {
+			initErr = fmt.Errorf("failed to read config file %q: %w", configPath, err)
+			return
+		}
+
+		var cfg App
+		if err := v.Unmarshal(&cfg); err != nil {
+			initErr = fmt.Errorf("failed to unmarshal config: %w", err)
+			return
+		}
+
+		// 验证配置
+		if err := cfg.Validate(); err != nil {
+			initErr = fmt.Errorf("invalid config: %w", err)
+			return
+		}
+
+		appConfig = &cfg
+	})
+
+	return initErr
+}
+
+// setViperDefaults 设置 viper 默认值。
+func setViperDefaults(v *viper.Viper) {
+	// Server 默认值
+	v.SetDefault("server.name", "my-app")
+	v.SetDefault("server.port", 8080)
+	v.SetDefault("server.version", "v1.0.0")
+
+	// Log 默认值
+	v.SetDefault("log.path", "./logs/app.log")
+	v.SetDefault("log.level", "info")
+	v.SetDefault("log.maxSize", 100)
+	v.SetDefault("log.maxBackups", 5)
+	v.SetDefault("log.maxAge", 7)
+
+	// Redis 默认值
+	v.SetDefault("db.redis.db", 0)
+	v.SetDefault("db.redis.addr", "localhost:6379")
+	v.SetDefault("db.redis.network", "tcp")
+
+	// Mysql 默认值
+	v.SetDefault("db.mysql.maxIdleConnection", 10)
+	v.SetDefault("db.mysql.maxOpenConnection", 100)
+
+	// Minio 默认值
+	v.SetDefault("minio.source", false)
+	v.SetDefault("minio.region", "us-east-1")
+
+	// Debug 默认值
+	v.SetDefault("debug.enablePProf", false)
+}
+
+// ResetForTesting 重置配置状态，仅供测试使用。
+// 生产环境请勿调用此函数。
+func ResetForTesting() {
+	appConfig = nil
+	initErr = nil
+	once = sync.Once{}
 }

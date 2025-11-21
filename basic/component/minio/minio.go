@@ -31,10 +31,10 @@ func newMinio() *Minio {
 	return &Minio{
 		name:            "minio",
 		isInit:          false,
-		endpoint:        config.AppConfig.Minio.Endpoint,
-		accessKeyID:     config.AppConfig.Minio.AccessKey,
-		secretAccessKey: config.AppConfig.Minio.SecretKey,
-		source:          config.AppConfig.Minio.Source,
+		endpoint:        config.Get().Minio.Endpoint,
+		accessKeyID:     config.Get().Minio.AccessKey,
+		secretAccessKey: config.Get().Minio.SecretKey,
+		source:          config.Get().Minio.Source,
 	}
 }
 
@@ -47,7 +47,7 @@ func GetMinio() *Minio {
 	logger.Sugar.Infof("\t\t[component] minio is initiating...")
 
 	//判断配置文件是否加载成功
-	if config.AppConfig == nil || config.AppConfig.Minio == nil {
+	if config.Get() == nil || config.Get().Minio == nil {
 		logger.Sugar.Errorf("\t[component] minio config load failed")
 		return nil
 	}

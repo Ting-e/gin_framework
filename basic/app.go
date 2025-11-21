@@ -43,10 +43,12 @@ func InitApp(configPath string, logPath string) App {
 	}
 
 	// 先加载配置
-	config.InitConfig(configPath)
-	if config.AppConfig == nil {
-		panic("[app] app config loading failed")
+	err := config.Init(configPath)
+	if err != nil {
+		logger.Sugar.Error(err)
 	}
+
+	AppConfig := config.Get()
 
 	// 验证日志目录
 	if _, err := os.ReadDir(logPath); err != nil {
@@ -57,9 +59,9 @@ func InitApp(configPath string, logPath string) App {
 	logger.InitLogger(logPath)
 
 	app := &DefaultApp{
-		name:       config.AppConfig.Server.Name,
-		port:       config.AppConfig.Server.Port,
-		version:    config.AppConfig.Server.Version,
+		name:       AppConfig.Server.Name,
+		port:       AppConfig.Server.Port,
+		version:    AppConfig.Server.Version,
 		configPath: configPath,
 	}
 
@@ -144,7 +146,7 @@ func (d *DefaultApp) LoadComponents() {
 
 // 初始化性能分析工具
 func (d *DefaultApp) InitPProf() {
-	if !config.AppConfig.Debug.EnablePProf {
+	if !config.Get().Debug.EnablePProf {
 		return
 	}
 

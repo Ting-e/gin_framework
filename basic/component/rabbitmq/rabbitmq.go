@@ -24,7 +24,7 @@ func newRabbitMQ() *RabbitMQ {
 	return &RabbitMQ{
 		name:   "rabbitmq",
 		isInit: false,
-		url:    config.GetConfig().RabbitMQ.Url,
+		url:    config.Get().RabbitMQ.URL,
 	}
 }
 
@@ -35,7 +35,7 @@ func GetRabbitMQ() *RabbitMQ {
 	}
 
 	//判断配置文件是否加载
-	if config.GetConfig() == nil || config.GetConfig().Minio == nil {
+	if config.Get() == nil || config.Get().Minio == nil {
 		logger.Sugar.Errorf("\t[component] rabbitmqEntity config load failed")
 		return nil
 	}

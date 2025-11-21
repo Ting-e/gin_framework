@@ -2,9 +2,10 @@ package redisdb
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
 	"project/basic/config"
 	"project/basic/logger"
+
+	"github.com/go-redis/redis/v8"
 )
 
 var redisEntity *Redis
@@ -26,11 +27,11 @@ func newRedis() *Redis {
 	return &Redis{
 		name:     "redis",
 		isInit:   false,
-		db:       config.AppConfig.Db.Redis.DB,
-		addr:     config.AppConfig.Db.Redis.Addr,
-		network:  config.AppConfig.Db.Redis.Network,
-		username: config.AppConfig.Db.Redis.Username,
-		password: config.AppConfig.Db.Redis.Password,
+		db:       config.Get().Db.Redis.DB,
+		addr:     config.Get().Db.Redis.Addr,
+		network:  config.Get().Db.Redis.Network,
+		username: config.Get().Db.Redis.Username,
+		password: config.Get().Db.Redis.Password,
 	}
 }
 
@@ -43,7 +44,7 @@ func GetRedis() *Redis {
 	logger.Sugar.Infof("\t[component] redis is initiating...")
 
 	//判断配置文件是否加载成功
-	if config.AppConfig == nil || config.AppConfig.Db.Redis == nil {
+	if config.Get() == nil || config.Get().Db.Redis == nil {
 		logger.Sugar.Errorf("\t[component] redis config load failed")
 		return nil
 	}

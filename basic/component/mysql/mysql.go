@@ -29,9 +29,9 @@ func newMysql() *Mysql {
 	return &Mysql{
 		name:              "mysql",
 		isInit:            false,
-		maxOpenConnection: config.AppConfig.Db.Mysql.MaxOpenConnection,
-		maxIdleConnection: config.AppConfig.Db.Mysql.MaxIdleConnection,
-		url:               config.AppConfig.Db.Mysql.Url,
+		maxOpenConnection: config.Get().Db.Mysql.MaxOpenConnection,
+		maxIdleConnection: config.Get().Db.Mysql.MaxIdleConnection,
+		url:               config.Get().Db.Mysql.URL,
 	}
 }
 
@@ -42,7 +42,7 @@ func GetMysql() *Mysql {
 	}
 
 	//判断配置文件是否加载
-	if config.AppConfig == nil || config.AppConfig.Minio == nil {
+	if config.Get() == nil || config.Get().Minio == nil {
 		logger.Sugar.Errorf("\t[component] mysql config load failed")
 		return nil
 	}

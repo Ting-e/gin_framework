@@ -70,7 +70,7 @@ func main() {
 
 	// /端/功能
 	login := r.Group("/applet/ceshi")
-	login.POST("/obtain-data", controller.GetData)
+	login.GET("/obtain-data", controller.GetData)
 
 	// 运行app
 	if err := app.Run(); err != nil {

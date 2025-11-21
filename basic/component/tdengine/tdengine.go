@@ -23,7 +23,7 @@ func newTdengine() *Tdengine {
 	return &Tdengine{
 		name:   "tdengine",
 		isInit: false,
-		url:    config.GetConfig().Db.Tdengine.Url,
+		url:    config.Get().Db.Tdengine.URL,
 	}
 }
 
@@ -34,7 +34,7 @@ func GetTdengine() *Tdengine {
 	}
 
 	//判断配置文件是否加载
-	if config.GetConfig() == nil || config.GetConfig().Minio == nil {
+	if config.Get() == nil || config.Get().Minio == nil {
 		logger.Sugar.Errorf("\t[component] clickhouseEntity config load failed")
 		return nil
 	}

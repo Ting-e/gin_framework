@@ -2,8 +2,8 @@ package model
 
 type GetDatasReq struct {
 	Key   string `json:"key,omitempty"`
-	Limit int    `json:"limit,omitempty"`
-	Skip  int    `json:"skip,omitempty"`
+	Limit *int   `json:"limit,omitempty"`
+	Skip  *int   `json:"skip,omitempty"`
 }
 type GetDatasResp struct {
 	Code  int     `json:"code"`

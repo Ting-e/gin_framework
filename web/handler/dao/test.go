@@ -8,23 +8,25 @@ import (
 	"time"
 )
 
-// 新增数据
+// 新增
 func AddData(db *sql.DB, key, field string) error {
-	query := `INSERT INTO
-	ceshi (
+	query := `
+	INSERT INTO
+		ceshi 
+	(
 	    key,
 		field,
 		create_time
 	)
-  VALUES
-	(?, ?, ?)`
-	// 准备插入语句
+  	VALUES
+		(?, ?, ?);`
+
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	// 执行插入语句
+
 	_, err = stmt.Exec(
 		key,
 		field,
@@ -37,63 +39,71 @@ func AddData(db *sql.DB, key, field string) error {
 	return nil
 }
 
-// 编辑数据
+// 编辑
 func EditData(db *sql.DB, field, key string) error {
-	query := `UPDATE
-	ceshi
-  SET
-  	field = ?
-  WHERE
-    key = ? `
+	query := `UPDATE ceshi SET field = ? WHERE key = ? `
 	_, err := db.Exec(query,
 		field,
 		key,
 	)
+
 	if err != nil {
 		logger.Sugar.Error(err)
 		return err
 	}
-	return nil
+
+	return err
 }
 
 // 不包含子查询
-func GetDatas(db *sql.DB, req *model.GetDatasReq) ([]*model.Data, int, error) {
+func GetData(db *sql.DB, req model.GetDatasReq) ([]*model.Data, int, error) {
 	var datas []*model.Data
-	query := `SELECT 
-    DISTINCT(key),
-	COALESCE(field,""),
-    DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:%s')
-  FROM 
-    ceshi
-  WHERE 
-    1=1`
+	var total int
+
+	query := `
+	SELECT 
+		DISTINCT(key),
+		COALESCE(field,""),
+		DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:%s')
+	FROM 
+		ceshi
+	WHERE 
+    	1=1`
+	count := `SELECT COUNT(DISTINCT(key)) FROM ceshi WHERE 1=1 `
+
 	var queryArgs []interface{}
 	var totalArgs []interface{}
 	var queryBuilder strings.Builder
-	queryBuilder.WriteString(query)
 	var totalBuilder strings.Builder
-	totalBuilder.WriteString(`SELECT COUNT(DISTINCT(key)) FROM ceshi WHERE 1=1 `)
+	queryBuilder.WriteString(query)
+	totalBuilder.WriteString(count)
+
 	if req.Key != "" {
 		queryArgs = append(queryArgs, req.Key)
 		totalArgs = append(totalArgs, req.Key)
 		queryBuilder.WriteString(` AND key = ? `)
 		totalBuilder.WriteString(` AND key = ?  `)
 	}
-	queryArgs = append(queryArgs, req.Limit, req.Skip)
-	queryBuilder.WriteString(` ORDER BY create_time DESC LIMIT?,?`)
-	logger.Sugar.Info(queryBuilder.String())
+
+	if req.Limit != nil && req.Skip != nil {
+		queryArgs = append(queryArgs, req.Limit, req.Skip)
+		queryBuilder.WriteString(` ORDER BY create_time DESC LIMIT ?, ?`)
+	}
+
 	stmt, err := db.Prepare(queryBuilder.String())
 	if err != nil {
 		logger.Sugar.Error(err)
 		return nil, -1, err
 	}
 	defer stmt.Close()
+
 	rows, err := stmt.Query(queryArgs...)
 	if err != nil {
 		logger.Sugar.Error(err)
 		return nil, -1, err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		data := new(model.Data)
 		err := rows.Scan(
@@ -105,34 +115,26 @@ func GetDatas(db *sql.DB, req *model.GetDatasReq) ([]*model.Data, int, error) {
 			logger.Sugar.Error(err)
 			return nil, -1, err
 		}
-		// err = json.Unmarshal([]byte(options), &data.Options)
-		// if err != nil {
-		// 	logger.Sugar.Error(err)
-		// 	return nil, -1, err
-		// }
-		datas = append(datas, data)
 
+		datas = append(datas, data)
 	}
-	var total int
+
 	err = db.QueryRow(totalBuilder.String(), totalArgs...).Scan(&total)
 	if err != nil {
 		logger.Sugar.Error(err)
 		return nil, -1, err
 	}
+
 	return datas, total, nil
 }
 
+// 删除
 func DelData(db *sql.DB, key string) error {
-	query := `DELETE
-	FROM
-	  ceshi
-	WHERE
-	  key = ?`
+	query := `DELETE FROM ceshi WHERE key = ?`
 	_, err := db.Exec(query, key)
 	if err != nil {
-		// tx.Rollback() // 回滚事务
 		logger.Sugar.Error(err)
 		return err
 	}
-	return nil
+	return err
 }
