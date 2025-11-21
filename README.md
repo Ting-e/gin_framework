@@ -37,13 +37,20 @@ go run cmd/server/main.go
 服务默认运行在 [http://localhost:8080](http://localhost:8080)
 
 <h2 id="DwJ9l">🛠 核心功能</h2>
+
 + ✅ 标准化分层：Handler → Service → Repository
-+ ✅ 统一响应格式：所有接口返回 {code, message, data}  
-+ ✅ 结构化日志：使用 Zap 记录请求/响应及错误  
-+ ✅ ID 生成：集成 Snowflake 分布式 ID  
-+ ✅ 文件上传：  
+  
++ ✅ 统一响应格式：所有接口返回 {code, message, data}
+  
++ ✅ 结构化日志：使用 Zap 记录请求/响应及错误
+  
++ ✅ ID 生成：集成 Snowflake 分布式 ID
+  
++ ✅ 文件上传：
+  
     - 后端直传 MinIO  
     - 预签名 URL 上传（前端直传）
+      
 + ✅ HTTP 客户端封装：简化第三方服务调用  
 
 ---
