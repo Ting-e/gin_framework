@@ -22,11 +22,9 @@ go mod tidy
 
 <h3 id="SZjam">3. 配置环境</h3>
 
-复制配置模板并按需修改：
+复制配置模板并按需修改，文件位置：
 
-```bash
-cp configs/app-dev.yaml.example configs/app-dev.yaml
-```
+ configs/app-dev.yaml
 
 <h3 id="gZ4aK">4. 启动服务</h3>
 
