@@ -10,7 +10,13 @@ import (
 )
 
 // PostRequest 发送post请求
-func PostRequest(url string, requestBody interface{}) (*model.Response, error) {
+//
+// 发送post请求
+//
+//	url：请求路径
+//	requestBody：请求数据
+//	contentType：请求数据格式（默认：application/json）
+func PostRequest(url string, requestBody interface{}, contentType string) (*model.Response, error) {
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("无法封送请求正文: %w", err)

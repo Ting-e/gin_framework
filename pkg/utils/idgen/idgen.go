@@ -8,8 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// GenerateID 生成随机ID（UUID）
-func GenerateID(length int) (string, error) {
+// GenerateUUID 生成随机ID（UUID）
+//
+//	length：指定长度
+func GenerateUUID(length int) (string, error) {
 	if length <= 0 {
 		return "", fmt.Errorf("长度必须大于0")
 	}
@@ -26,8 +28,12 @@ func GenerateID(length int) (string, error) {
 	return shortenedID, nil
 }
 
-// GenerateKey 生成随机ID（小写+数字）
-func GenerateKey(length int) (string, error) {
+// GenerateID 生成随机ID（小写+数字）
+//
+// 可根据自身情况自由配置内容
+//
+//	length：指定长度
+func GenerateID(length int) (string, error) {
 	if length <= 0 {
 		return "", fmt.Errorf("长度必须大于0")
 	}

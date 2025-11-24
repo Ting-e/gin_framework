@@ -1,8 +1,9 @@
 # 服务配置
 server:
-  name: test
-  port: 12001
-  version: "1.0"
+  name: Test-server
+  port: 8080
+  version: "v1.0.0"
+  environment: "Development"
 
 # 数据库配置
 db:
@@ -33,12 +34,12 @@ log:
   maxBackups: 3     # 保留旧日志文件数量
   maxAge: 20        # 保留日志天数
 
-# MinIO 对象存储配置
-minio:
+# 对象存储配置（需要适配AWS S3）
+storage:
   enabled: true               
   bucketName: "test"
   region: "us-east-1"
-  endpoint: "https://minio.org.cn/"
+  endpoint: "https://storage.org.cn/"
   accessKey: "GYugUjhGUYTyvHKGFukyty"
   secretKey: "jfTYfkTFykufhGKFjlglyuiGYUyuLUu"
 
@@ -54,4 +55,3 @@ debug:
 components:
   - mysql
   # - redis
-  # - minio

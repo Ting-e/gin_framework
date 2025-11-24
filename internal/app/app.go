@@ -226,13 +226,6 @@ func (d *DefaultApp) loadComponent(comp string) error {
 		}
 		m.InitComponent()
 
-	case "minio":
-		m := database.GetMinio()
-		if m == nil {
-			return fmt.Errorf("minio component is nil")
-		}
-		m.InitComponent()
-
 	case "redis":
 		r := database.GetRedis()
 		if r == nil {

@@ -21,7 +21,7 @@ type App struct {
 	Server     *Server   `mapstructure:"server"`
 	Db         *Db       `mapstructure:"db"`
 	Log        *Log      `mapstructure:"log"`
-	Minio      *Minio    `mapstructure:"minio"`
+	Storage    *Storage  `mapstructure:"storage"`
 	RabbitMQ   *RabbitMQ `mapstructure:"rabbitmq"`
 	Public     *Public   `mapstructure:"public"`
 	Debug      *Debug    `mapstructure:"debug"`
@@ -30,9 +30,10 @@ type App struct {
 
 // Server 配置。
 type Server struct {
-	Name    string `mapstructure:"name"`
-	Port    int    `mapstructure:"port"`
-	Version string `mapstructure:"version"`
+	Name        string `mapstructure:"name"`
+	Port        int    `mapstructure:"port"`
+	Version     string `mapstructure:"version"`
+	Environment string `mapstructure:"environment"`
 }
 
 // Db 数据库配置。
@@ -58,8 +59,8 @@ type Mysql struct {
 	MaxOpenConnection int    `mapstructure:"maxOpenConnection"`
 }
 
-// Minio 配置。
-type Minio struct {
+// Storage 配置。
+type Storage struct {
 	AccessKey  string `mapstructure:"accessKey"`
 	SecretKey  string `mapstructure:"secretKey"`
 	BucketName string `mapstructure:"bucketName"`
@@ -153,11 +154,11 @@ func (a *App) SafeCopy() *App {
 		}
 	}
 
-	if a.Minio != nil {
-		minio := *a.Minio
-		minio.SecretKey = "***REDACTED***"
-		minio.AccessKey = redactKey(minio.AccessKey)
-		cp.Minio = &minio
+	if a.Storage != nil {
+		storage := *a.Storage
+		storage.SecretKey = "***REDACTED***"
+		storage.AccessKey = redactKey(storage.AccessKey)
+		cp.Storage = &storage
 	}
 
 	if a.RabbitMQ != nil {
@@ -227,9 +228,9 @@ func (a *App) Validate() error {
 		}
 	}
 
-	if a.Minio != nil {
-		if err := a.Minio.Validate(); err != nil {
-			return fmt.Errorf("minio config: %w", err)
+	if a.Storage != nil {
+		if err := a.Storage.Validate(); err != nil {
+			return fmt.Errorf("storage config: %w", err)
 		}
 	}
 
@@ -284,18 +285,18 @@ func (d *Db) Validate() error {
 	return nil
 }
 
-// Validate 验证 Minio 配置。
-func (m *Minio) Validate() error {
-	if m.AccessKey == "" {
+// Validate 验证 Storage 配置。
+func (s *Storage) Validate() error {
+	if s.AccessKey == "" {
 		return errors.New("accessKey is required")
 	}
-	if m.SecretKey == "" {
+	if s.SecretKey == "" {
 		return errors.New("secretKey is required")
 	}
-	if m.BucketName == "" {
+	if s.BucketName == "" {
 		return errors.New("bucketName is required")
 	}
-	if m.Endpoint == "" {
+	if s.Endpoint == "" {
 		return errors.New("endpoint is required")
 	}
 	return nil
@@ -369,7 +370,7 @@ func setViperDefaults(v *viper.Viper) {
 	v.SetDefault("server.version", "v1.0.0")
 
 	// Log 默认值
-	v.SetDefault("log.path", "./logs/app.log")
+	v.SetDefault("log.path", "./log/")
 	v.SetDefault("log.level", "info")
 	v.SetDefault("log.maxSize", 100)
 	v.SetDefault("log.maxBackups", 5)
@@ -384,9 +385,9 @@ func setViperDefaults(v *viper.Viper) {
 	v.SetDefault("db.mysql.maxIdleConnection", 10)
 	v.SetDefault("db.mysql.maxOpenConnection", 100)
 
-	// Minio 默认值
-	v.SetDefault("minio.source", false)
-	v.SetDefault("minio.region", "us-east-1")
+	// Storage 默认值
+	v.SetDefault("storage.source", false)
+	v.SetDefault("storage.region", "us-east-1")
 
 	// Debug 默认值
 	v.SetDefault("debug.enablePProf", false)

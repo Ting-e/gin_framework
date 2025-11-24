@@ -8,6 +8,15 @@ import (
 
 // RegisterRoutes 注册所有 API 路由
 func RegisterRoutes(r *gin.Engine) {
+
+	r.LoadHTMLFiles("web/index.html")
+
+	// localhost
+	loclahost := r.Group("/")
+	{
+		loclahost.GET("", handler.HomePage)
+	}
+
 	// 测试接口
 	applet := r.Group("/api")
 	{

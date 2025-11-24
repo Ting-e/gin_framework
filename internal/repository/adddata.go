@@ -11,7 +11,7 @@ import (
 // 新增
 func AddData(db *sql.DB, req model.AddDataReq) error {
 
-	key, err := idgen.GenerateKey(16)
+	key, err := idgen.GenerateID(16)
 	if err != nil {
 		logger.Sugar.Error(err)
 		return err

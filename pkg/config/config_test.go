@@ -53,9 +53,9 @@ db:
     db: 1
     password: "secret"
 
-minio:
-  accessKey: "minioadmin"
-  secretKey: "minioadmin123"
+storage:
+  accessKey: "admin"
+  secretKey: "admin123"
   bucketName: "test-bucket"
   endpoint: "localhost:9000"
   region: "us-west-1"
@@ -76,8 +76,8 @@ minio:
 	assert.Equal(t, "user:pass@tcp(localhost:3306)/dbname", cfg.Db.Mysql.URL)
 	assert.Equal(t, 1, cfg.Db.Redis.DB)
 	assert.Equal(t, "secret", cfg.Db.Redis.Password)
-	assert.Equal(t, "minioadmin123", cfg.Minio.SecretKey)
-	assert.True(t, cfg.Minio.Source)
+	assert.Equal(t, "admin123", cfg.Storage.SecretKey)
+	assert.True(t, cfg.Storage.Source)
 }
 
 func TestInit_DefaultValues(t *testing.T) {
@@ -144,12 +144,12 @@ db:
 			expectedErr: "mysql.url is required",
 		},
 		{
-			name: "missing minio accessKey",
+			name: "missing storage accessKey",
 			config: `
 server:
   name: test-app
   port: 8080
-minio:
+storage:
   secretKey: "secret"
   bucketName: "bucket"
   endpoint: "localhost:9000"
@@ -246,7 +246,7 @@ db:
     addr: "localhost:6379"
     password: "redis-secret"
 
-minio:
+storage:
   accessKey: "AKIAIOSFODNN7EXAMPLE"
   secretKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
   bucketName: "test-bucket"
@@ -264,15 +264,15 @@ rabbitmq:
 	safeCfg := cfg.SafeCopy()
 
 	// 验证脱敏
-	assert.Equal(t, "***REDACTED***", safeCfg.Minio.SecretKey)
-	assert.Contains(t, safeCfg.Minio.AccessKey, "***")
-	assert.NotEqual(t, cfg.Minio.AccessKey, safeCfg.Minio.AccessKey)
+	assert.Equal(t, "***REDACTED***", safeCfg.Storage.SecretKey)
+	assert.Contains(t, safeCfg.Storage.AccessKey, "***")
+	assert.NotEqual(t, cfg.Storage.AccessKey, safeCfg.Storage.AccessKey)
 	assert.Equal(t, "***REDACTED***", safeCfg.Db.Redis.Password)
 	assert.Contains(t, safeCfg.Db.Mysql.URL, "***REDACTED***")
 	assert.Contains(t, safeCfg.RabbitMQ.URL, "***REDACTED***")
 
 	// 验证原始配置未被修改
-	assert.Equal(t, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", cfg.Minio.SecretKey)
+	assert.Equal(t, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", cfg.Storage.SecretKey)
 	assert.Equal(t, "redis-secret", cfg.Db.Redis.Password)
 }
 

@@ -35,7 +35,7 @@ func GetRabbitMQ() *RabbitMQ {
 	}
 
 	//判断配置文件是否加载
-	if config.Get() == nil || config.Get().Minio == nil {
+	if config.Get() == nil || config.Get().RabbitMQ == nil {
 		logger.Sugar.Errorf("\t[component] rabbitmqEntity config load failed")
 		return nil
 	}

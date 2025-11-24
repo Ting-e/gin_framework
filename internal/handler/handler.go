@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"project/internal/model"
 	srv "project/internal/service"
+	"project/pkg/config"
 	"project/pkg/logger"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +16,17 @@ var service srv.APIService
 
 func init() {
 	service = srv.GetService()
+}
+
+func HomePage(c *gin.Context) {
+	c.HTML(200, "index.html", model.PageData{
+		Title:         "Gin_framework",
+		ServiceName:   config.Get().Server.Name,
+		Now:           time.Now().Format("2006-01-02 15:04:05"),
+		Environment:   config.Get().Server.Environment,
+		Version:       config.Get().Server.Version,
+		StatusMessage: config.Get().Server.Name + " is running",
+	})
 }
 
 func GetList(c *gin.Context) {

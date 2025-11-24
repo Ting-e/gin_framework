@@ -42,7 +42,7 @@ func GetMysql() *Mysql {
 	}
 
 	//判断配置文件是否加载
-	if config.Get() == nil || config.Get().Minio == nil {
+	if config.Get() == nil || config.Get().Db.Mysql == nil {
 		logger.Sugar.Errorf("\t[component] mysql config load failed")
 		return nil
 	}
