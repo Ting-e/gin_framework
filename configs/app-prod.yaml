@@ -54,4 +54,6 @@ debug:
 # 定义启用的组件列表
 components:
   - mysql
+  # - gorm
   # - redis
+  # - tdengine

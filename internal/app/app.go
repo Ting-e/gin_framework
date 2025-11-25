@@ -226,6 +226,13 @@ func (d *DefaultApp) loadComponent(comp string) error {
 		}
 		m.InitComponent()
 
+	case "gorm":
+		gm := database.GetGormMysql()
+		if gm == nil {
+			return fmt.Errorf("gorm_mysql component is nil")
+		}
+		gm.InitComponent()
+
 	case "redis":
 		r := database.GetRedis()
 		if r == nil {
