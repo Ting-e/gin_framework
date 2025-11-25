@@ -1,15 +1,15 @@
 package service
 
 import (
-	"project/internal/model"
-	"project/internal/repository"
-	mysqldb "project/pkg/database"
+	"project/examples/simeple_crud/model"
+	"project/examples/simeple_crud/repository"
+	"project/pkg/database"
 )
 
 func (s *Service) GetList(req model.GetListReq) (res model.GetListResp) {
 	res.Code = 500
 	res.Mess = "内部服务出错"
-	db := mysqldb.GetMysql().GetDb()
+	db := database.GetMysql().GetDb()
 
 	datas, total, err := repository.GetList(db, req)
 	if err != nil {

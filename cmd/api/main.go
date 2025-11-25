@@ -13,7 +13,7 @@ func main() {
 
 	r := application.GetRouter()
 
-	// 注册所有路由 ← 核心变化在这里
+	// 注册路由
 	router.RegisterRoutes(r)
 
 	if err := application.Run(); err != nil {

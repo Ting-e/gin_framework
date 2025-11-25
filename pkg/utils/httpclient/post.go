@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"project/internal/model"
 )
+
+type Response struct {
+	Code    int    // 状态码
+	Message string // 消息
+}
 
 // PostRequest 发送post请求
 //
@@ -16,7 +20,7 @@ import (
 //	url：请求路径
 //	requestBody：请求数据
 //	contentType：请求数据格式（默认：application/json）
-func PostRequest(url string, requestBody interface{}, contentType string) (*model.Response, error) {
+func PostRequest(url string, requestBody interface{}, contentType string) ([]byte, error) {
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("无法封送请求正文: %w", err)
@@ -35,15 +39,12 @@ func PostRequest(url string, requestBody interface{}, contentType string) (*mode
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		bodyBytes, _ := io.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 || err != nil {
+
 		return nil, fmt.Errorf("收到未成功的状态码: %d, 响应体: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	res := new(model.Response)
-	err = json.NewDecoder(resp.Body).Decode(&res)
-	if err != nil {
-		return nil, fmt.Errorf("无法解码响应正文: %w", err)
-	}
-	return res, nil
+	return bodyBytes, nil
 }

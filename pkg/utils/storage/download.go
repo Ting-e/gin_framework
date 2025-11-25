@@ -3,12 +3,11 @@ package storage
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
 
-	"os"
 	local_config "project/pkg/config"
 	"project/pkg/logger"
-	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -17,16 +16,11 @@ import (
 )
 
 // DownloadFile 下载文件
-func DownloadFile(filePath string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("打开文件失败: %w", err)
-	}
-	defer file.Close()
-
-	// 构建上传文件名
-	timestamp := strconv.Itoa(int(time.Now().UnixNano() / int64(time.Millisecond)))
-	key := "testFolder/" + timestamp + ".xlsx"
+//
+// 下载文件到本地
+//
+//	fileName：文件在存储桶中的key
+func DownloadFile(fileName string) ([]byte, error) {
 
 	ctx := context.Background()
 	localCfg := local_config.Get()
@@ -42,29 +36,27 @@ func DownloadFile(filePath string) error {
 	)
 	if err != nil {
 		logger.Sugar.Error("加载Storage配置失败:", err)
-		return fmt.Errorf("加载Storage配置失败: %w", err)
+		return nil, fmt.Errorf("加载Storage配置失败: %w", err)
 	}
 
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.UsePathStyle = true
-	})
+	client := s3.NewFromConfig(cfg)
 
-	_, err = client.PutObject(context.Background(), &s3.PutObjectInput{
+	resp, err := client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: aws.String(localCfg.Storage.BucketName),
-		Key:    aws.String(key),
-		Body:   file,
+		Key:    aws.String(fileName),
 	})
 	if err != nil {
-		logger.Sugar.Error("上传文件到存储桶失败:", err)
-		return fmt.Errorf("上传文件到存储桶失败: %w", err)
-	}
 
-	// 删除本地文件
-	err = os.Remove(filePath)
+		logger.Sugar.Error(err)
+		return nil, nil
+	}
+	defer resp.Body.Close()
+
+	// 读取内容
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Sugar.Error("删除本地文件失败:", err)
-		return fmt.Errorf("删除本地文件失败: %w", err)
+		log.Fatalf("读取响应体失败: %v", err)
 	}
 
-	return nil
+	return body, nil
 }

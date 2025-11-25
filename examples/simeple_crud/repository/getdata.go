@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"project/internal/model"
+	"project/examples/simeple_crud/model"
 	"project/pkg/logger"
 )
 
