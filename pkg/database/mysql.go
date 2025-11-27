@@ -87,6 +87,20 @@ func (m *Mysql) InitComponent() bool {
 	return true
 }
 
+// 关闭 MySQL 连接
+func (m *Mysql) Close() error {
+	if m.dB == nil {
+		return nil
+	}
+	err := m.dB.Close()
+	if err != nil {
+		logger.Sugar.Errorf("\t[component] %s close failed: %v", m.name, err)
+		return err
+	}
+	m.isInit = false
+	return nil
+}
+
 func (m *Mysql) IsInitialize() bool {
 	return m.isInit
 }

@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-// 不包含子查询
 func GetList(db *sql.DB, req model.GetListReq) ([]model.Data, int, error) {
 	var datas []model.Data
 	var total int

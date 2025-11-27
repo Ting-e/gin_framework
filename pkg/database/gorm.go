@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 
 	"project/pkg/config"
 	local_logger "project/pkg/logger"
@@ -59,6 +60,9 @@ func (g *GormMysql) InitComponent() bool {
 	// 构建 GORM 配置
 	gormConfig := &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true, // 禁用表名复数化：gorm默认会把结构体名称+s得到的结果映射为数据库中的表名，设置该项后则不加s
+		},
 	}
 
 	var err error
@@ -87,6 +91,25 @@ func (g *GormMysql) InitComponent() bool {
 
 	g.isInit = true
 	return true
+}
+
+// 关闭 GORM MySQL 底层数据库连接
+func (g *GormMysql) Close() error {
+	if g.db == nil {
+		return nil
+	}
+	sqlDB, err := g.db.DB()
+	if err != nil {
+		local_logger.Sugar.Errorf("\t[component] %s get raw db failed on close: %v", g.name, err)
+		return err
+	}
+	err = sqlDB.Close()
+	if err != nil {
+		local_logger.Sugar.Errorf("\t[component] %s close failed: %v", g.name, err)
+		return err
+	}
+	g.isInit = false
+	return nil
 }
 
 func (g *GormMysql) IsInitialize() bool {

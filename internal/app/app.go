@@ -11,9 +11,8 @@ import (
 
 	"project/internal/middleware"
 	"project/pkg/config"
-	"project/pkg/database"
 	"project/pkg/logger"
-	"project/pkg/queue"
+	"project/pkg/response"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -38,6 +37,15 @@ type DefaultApp struct {
 	configPath string
 	version    string
 	server     *http.Server
+}
+
+// localhost页面参数
+type PageData struct {
+	ServiceName   string // 服务名称
+	Now           string // 服务器时间
+	Environment   string // 环境 (Development/Production)
+	Version       string // 版本号
+	StatusMessage string // 状态消息
 }
 
 // InitApp 初始化应用
@@ -88,10 +96,10 @@ func InitApp() (App, error) {
 	fmt.Println()
 
 	// 打印启动信息
-	logger.Sugar.Infof("[app] using config file: %s", opts.ConfigPath)
-	logger.Sugar.Infof("[app] using log directory: %s", opts.LogPath)
-	logger.Sugar.Info("[app] logger initialized successfully")
-	logger.Sugar.Infof("[app] %s initialized successfully, version: %s", app.name, app.version)
+	logger.Sugar.Infof("\t[app] using config file: %s", opts.ConfigPath)
+	logger.Sugar.Infof("\t[app] using log directory: %s", opts.LogPath)
+	logger.Sugar.Info("\t[app] logger initialized successfully")
+	logger.Sugar.Infof("\t[app] %s initialized successfully, version: %s", app.name, app.version)
 
 	return app, nil
 }
@@ -124,83 +132,19 @@ func (d *DefaultApp) GetRouter() *gin.Engine {
 		logger.Sugar.Errorf("[app] failed to set trusted proxies: %v", err)
 	}
 
-	// 健康检查接口
-	d.router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"version": d.version,
-			"name":    d.name,
+	// localhost
+	d.router.GET("/", func(c *gin.Context) {
+
+		response.Success(c, PageData{
+			ServiceName:   config.Get().Server.Name,
+			Now:           time.Now().Format("2006-01-02 15:04:05"),
+			Environment:   config.Get().Server.Environment,
+			Version:       config.Get().Server.Version,
+			StatusMessage: config.Get().Server.Name + " is running",
 		})
 	})
 
 	return d.router
-}
-
-// LoadComponents 加载组件
-func (d *DefaultApp) LoadComponents() error {
-	if len(d.components) == 0 {
-		logger.Sugar.Info("[app] no components to load")
-		return nil
-	}
-
-	logger.Sugar.Infof("[app] loading %d components...", len(d.components))
-
-	for _, comp := range d.components {
-		if err := d.loadComponent(comp); err != nil {
-			return fmt.Errorf("failed to load component '%s': %w", comp, err)
-		}
-	}
-
-	logger.Sugar.Info("[app] all components loaded successfully")
-	return nil
-}
-
-// loadComponent 加载单个组件
-func (d *DefaultApp) loadComponent(comp string) error {
-	logger.Sugar.Infof("[app] loading component: %s", comp)
-
-	switch comp {
-	case "mysql":
-		m := database.GetMysql()
-		if m == nil {
-			return fmt.Errorf("mysql component is nil")
-		}
-		m.InitComponent()
-
-	case "gorm":
-		gm := database.GetGormMysql()
-		if gm == nil {
-			return fmt.Errorf("gorm_mysql component is nil")
-		}
-		gm.InitComponent()
-
-	case "redis":
-		r := database.GetRedis()
-		if r == nil {
-			return fmt.Errorf("redis component is nil")
-		}
-		r.InitComponent()
-
-	case "tdengine":
-		t := database.GetTdengine()
-		if t == nil {
-			return fmt.Errorf("tdengine component is nil")
-		}
-		t.InitComponent()
-
-	case "rabbitmq":
-		rb := queue.GetRabbitMQ()
-		if rb == nil {
-			return fmt.Errorf("rabbitmq component is nil")
-		}
-		rb.InitComponent()
-
-	default:
-		return fmt.Errorf("unknown component: %s", comp)
-	}
-
-	logger.Sugar.Infof("[app] component '%s' loaded successfully", comp)
-	return nil
 }
 
 // InitPProf 初始化性能分析工具
@@ -213,12 +157,6 @@ func (d *DefaultApp) InitPProf() {
 	router := d.GetRouter()
 	pprof.Register(router)
 	logger.Sugar.Info("[app] pprof enabled, visit /debug/pprof/")
-}
-
-// SetComponent 设置组件列表
-func (d *DefaultApp) SetComponent(components []string) {
-	d.components = components
-	logger.Sugar.Infof("[app] components set: %v", components)
 }
 
 // Run 启动应用（阻塞式，带优雅关闭）
@@ -249,8 +187,8 @@ func (d *DefaultApp) Run() error {
 
 	// 在 goroutine 中启动服务器
 	go func() {
-		logger.Sugar.Infof("[app] server starting on %s", addr)
-		logger.Sugar.Infof("[app] visit: http://localhost%s", addr)
+		logger.Sugar.Infof("\t[app] server starting on %s", addr)
+		logger.Sugar.Infof("\t[app] visit: http://localhost%s", addr)
 		if err := d.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Sugar.Fatalf("[app] failed to start server: %v", err)
 		}
@@ -258,7 +196,7 @@ func (d *DefaultApp) Run() error {
 
 	// 等待退出信号
 	sig := <-quit
-	logger.Sugar.Infof("[app] received signal: %v, shutting down...", sig)
+	logger.Sugar.Infof("\t[app] received signal: %v, shutting down...", sig)
 
 	// 关闭
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -266,6 +204,11 @@ func (d *DefaultApp) Run() error {
 
 	if err := d.Shutdown(ctx); err != nil {
 		return fmt.Errorf("server shutdown error: %w", err)
+	}
+
+	// 加载组件
+	if err := d.CloseComponents(); err != nil {
+		return fmt.Errorf("failed to load components: %w", err)
 	}
 
 	logger.Sugar.Info("[app] server exited gracefully")
@@ -278,7 +221,7 @@ func (d *DefaultApp) Shutdown(ctx context.Context) error {
 		return nil
 	}
 
-	logger.Sugar.Info("[app] shutting down server...")
+	logger.Sugar.Info("\t[app] shutting down server...")
 
 	// 关闭 HTTP 服务器
 	if err := d.server.Shutdown(ctx); err != nil {
@@ -286,12 +229,6 @@ func (d *DefaultApp) Shutdown(ctx context.Context) error {
 		return err
 	}
 
-	// 关闭数据库连接等资源
-	for _, comp := range d.components {
-		logger.Sugar.Infof("[app] cleaning up component: %s", comp)
-		// TODO: 调用各组件的 Close 方法
-	}
-
-	logger.Sugar.Info("[app] shutdown completed")
+	logger.Sugar.Info("\t[app] shutdown completed")
 	return nil
 }

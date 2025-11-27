@@ -74,6 +74,22 @@ func (r *RabbitMQ) InitComponent() bool {
 	return true
 }
 
+// Close 关闭 RabbitMQ 连接
+func (r *RabbitMQ) Close() error {
+	if r.rmq == nil {
+		return nil
+	}
+	err := r.rmq.Close()
+	if err != nil {
+		logger.Sugar.Errorf("\t[component] %s close failed: %v", r.name, err)
+		return err
+	}
+	r.isInit = false
+	r.rmq = nil // 避免重复关闭
+	logger.Sugar.Infof("\t[component] %s closed successfully", r.name)
+	return nil
+}
+
 func (r *RabbitMQ) IsInitialize() bool {
 	return r.isInit
 }

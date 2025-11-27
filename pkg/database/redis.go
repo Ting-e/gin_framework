@@ -94,6 +94,21 @@ func (r *Redis) InitComponent() bool {
 	return true
 }
 
+// 关闭 Redis 连接
+func (r *Redis) Close() error {
+	if r.redisDB == nil {
+		return nil
+	}
+	err := r.redisDB.Close()
+	if err != nil {
+		logger.Sugar.Errorf("\t[component] %s close failed: %v", r.name, err)
+		return err
+	}
+	r.isInit = false
+	logger.Sugar.Infof("\t[component] %s closed successfully", r.name)
+	return nil
+}
+
 func (r *Redis) IsInitialize() bool {
 	return r.isInit
 }

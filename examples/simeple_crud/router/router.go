@@ -7,15 +7,16 @@ import (
 )
 
 // RegisterRoutes 注册所有 API 路由
-func ExampleRegisterRoutes(r *gin.Engine) {
+func ExampleRegisterRoutes_SQL(r *gin.Engine) {
 
-	// 测试接口
-	applet := r.Group("/api")
+	// 测试接口（原生sql语句）
+	sql := r.Group("/sql")
 	{
-		applet.GET("/obtain-list", handler.GetList)     // 获取列表
-		applet.GET("/obtain-data/:id", handler.GetData) // 获取详情
-		applet.POST("/add-data", handler.AddData)       // 新增数据
-		applet.DELETE("/del-data/:id", handler.DelData) // 删除数据
-		applet.POST("/edit-data/:id", handler.EditData) // 修改数据
+		sql.GET("/obtain-list", handler.GetList)     // 获取列表
+		sql.GET("/obtain-data/:id", handler.GetData) // 获取详情
+		sql.POST("/add-data", handler.AddData)       // 新增数据
+		sql.DELETE("/del-data/:id", handler.DelData) // 删除数据
+		sql.POST("/edit-data/:id", handler.EditData) // 修改数据
 	}
+
 }

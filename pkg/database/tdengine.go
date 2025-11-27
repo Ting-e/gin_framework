@@ -78,6 +78,21 @@ func (t *Tdengine) InitComponent() bool {
 	return true
 }
 
+// 关闭 Tdengine 连接
+func (t *Tdengine) Close() error {
+	if t.taos == nil {
+		return nil
+	}
+	err := t.taos.Close()
+	if err != nil {
+		logger.Sugar.Errorf("\t[component] %s close failed: %v", t.name, err)
+		return err
+	}
+	t.isInit = false
+	logger.Sugar.Infof("\t[component] %s closed successfully", t.name)
+	return nil
+}
+
 func (t *Tdengine) IsInitialize() bool {
 	return t.isInit
 }

@@ -16,11 +16,7 @@ type Response struct {
 
 // Success 成功响应（带数据）
 func Success(c *gin.Context, data interface{}) {
-	c.JSON(http.StatusOK, Response{
-		Code:    errcode.Success,
-		Message: errcode.ErrorMessage[errcode.Success],
-		Data:    data,
-	})
+	c.JSON(http.StatusOK, data)
 }
 
 // SuccessNoData 成功响应（无数据）
@@ -33,7 +29,7 @@ func SuccessNoData(c *gin.Context, code int, mess string) {
 
 // Failed 失败响应
 func Failed(c *gin.Context, code int, message string) {
-	c.JSON(code, Response{
+	c.JSON(errcode.Success, Response{
 		Code:    code,
 		Message: message,
 	})
@@ -41,7 +37,7 @@ func Failed(c *gin.Context, code int, message string) {
 
 // FailedWithData 失败响应（带数据）
 func FailedWithData(c *gin.Context, code int, message string, data interface{}) {
-	c.JSON(code, Response{
+	c.JSON(errcode.Success, Response{
 		Code:    code,
 		Message: message,
 		Data:    data,
