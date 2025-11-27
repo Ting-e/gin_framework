@@ -1,7 +1,7 @@
 package service
 
 import (
-	"project/examples/simeple_crud/model"
+	"project/examples/simple_crud/model"
 	"project/pkg/utils/snowflake"
 )
 

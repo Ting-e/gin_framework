@@ -1,17 +1,17 @@
 package service
 
 import (
-	"project/examples/simeple_crud/model"
-	"project/examples/simeple_crud/repository"
+	"project/examples/simple_crud/model"
+	"project/examples/simple_crud/repository"
 	"project/pkg/database"
 )
 
-func (s *Service) DelData(ID string) (res model.DelDataResp) {
+func (s *Service) EditData(req model.EditDataReq) (res model.EditDataResp) {
 	res.Code = 500
 	res.Mess = "内部服务出错"
 	db := database.GetMysql().GetDb()
 
-	err := repository.DelData(db, ID)
+	err := repository.EditData(db, req)
 	if err != nil {
 		res.Code = 400
 		res.Mess = "删除失败"

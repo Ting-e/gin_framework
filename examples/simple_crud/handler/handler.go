@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"project/examples/simeple_crud/model"
-	srv "project/examples/simeple_crud/service"
+	"project/examples/simple_crud/model"
+	srv "project/examples/simple_crud/service"
 	"project/pkg/logger"
 	"project/pkg/response"
 

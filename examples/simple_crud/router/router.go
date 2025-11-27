@@ -1,7 +1,7 @@
 package router
 
 import (
-	"project/examples/simeple_crud/handler"
+	"project/examples/simple_crud/handler"
 
 	"github.com/gin-gonic/gin"
 )

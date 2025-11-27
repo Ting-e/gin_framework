@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"project/examples/simeple_crud/model"
+	"project/examples/simple_crud/model"
 	"project/pkg/logger"
 	"project/pkg/utils/idgen"
 	"time"

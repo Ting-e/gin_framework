@@ -6,7 +6,7 @@ import (
 	"project/internal/app"
 
 	gorm_crud_router "project/examples/gorm_crud/router"
-	simeple_crud_router "project/examples/simeple_crud/router"
+	simple_crud_router "project/examples/simple_crud/router"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	r := application.GetRouter()
 
 	// 注册路由
-	simeple_crud_router.ExampleRegisterRoutes_SQL(r)
+	simple_crud_router.ExampleRegisterRoutes_SQL(r)
 	gorm_crud_router.ExampleRegisterRoutes_Grom(r)
 
 	if err := application.Run(); err != nil {
