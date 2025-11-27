@@ -46,7 +46,6 @@ func DownloadFile(fileName string) ([]byte, error) {
 		Key:    aws.String(fileName),
 	})
 	if err != nil {
-
 		logger.Sugar.Error(err)
 		return nil, nil
 	}

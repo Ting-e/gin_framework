@@ -21,6 +21,7 @@ type App struct {
 	Server     *Server   `mapstructure:"server"`
 	Db         *Db       `mapstructure:"db"`
 	Log        *Log      `mapstructure:"log"`
+	JWT        *JWT      `mapstructure:"jwt"`
 	Storage    *Storage  `mapstructure:"storage"`
 	RabbitMQ   *RabbitMQ `mapstructure:"rabbitmq"`
 	Public     *Public   `mapstructure:"public"`
@@ -34,6 +35,14 @@ type Server struct {
 	Port        int    `mapstructure:"port"`
 	Version     string `mapstructure:"version"`
 	Environment string `mapstructure:"environment"`
+}
+
+// JWT JWT 配置
+type JWT struct {
+	Secret             string `mapstructure:"secret"`
+	Issuer             string `mapstructure:"issuer"`
+	ExpiresHours       int    `mapstructure:"expires_hours"`
+	RefreshExpiresDays int    `mapstructure:"refresh_expires_days"`
 }
 
 // Db 数据库配置。
@@ -131,6 +140,12 @@ func (a *App) SafeCopy() *App {
 		cp.Server = &server
 	}
 
+	// 深拷贝嵌套结构
+	if a.JWT != nil {
+		jwt := *a.JWT
+		cp.JWT = &jwt
+	}
+
 	if a.Db != nil {
 		db := *a.Db
 		cp.Db = &db
@@ -218,6 +233,12 @@ func (a *App) Validate() error {
 		return errors.New("missing 'server' section")
 	}
 
+	if a.JWT != nil {
+		if err := a.JWT.Validate(); err != nil {
+			return fmt.Errorf("jwt config: %w", err)
+		}
+	}
+
 	if err := a.Server.Validate(); err != nil {
 		return fmt.Errorf("server config: %w", err)
 	}
@@ -256,6 +277,26 @@ func (s *Server) Validate() error {
 	}
 	if s.Name == "" {
 		return errors.New("server name is required")
+	}
+	return nil
+}
+
+// Validate 验证 Storage 配置。
+func (j *JWT) Validate() error {
+	if j.Secret == "" {
+		return errors.New("secret is required")
+	}
+
+	if j.Issuer == "" {
+		return errors.New("issuer is required")
+	}
+
+	if j.ExpiresHours == 0 {
+		return errors.New("expires_hours is required")
+	}
+
+	if j.RefreshExpiresDays == 0 {
+		return errors.New("refresh_expires_days is required")
 	}
 	return nil
 }
@@ -368,6 +409,12 @@ func setViperDefaults(v *viper.Viper) {
 	v.SetDefault("server.name", "my-app")
 	v.SetDefault("server.port", 8080)
 	v.SetDefault("server.version", "v1.0.0")
+
+	// JWT 默认值
+	v.SetDefault("jwt.secret", "woaifcll")
+	v.SetDefault("jwt.issuer", "tinge")
+	v.SetDefault("jwt.expires_hours", 2)
+	v.SetDefault("jwt.refresh_expires_days", 7)
 
 	// Log 默认值
 	v.SetDefault("log.path", "./log/")

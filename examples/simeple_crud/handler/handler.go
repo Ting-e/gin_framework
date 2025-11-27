@@ -2,10 +2,10 @@ package handler
 
 import (
 	"encoding/json"
-	"net/http"
 	"project/examples/simeple_crud/model"
 	srv "project/examples/simeple_crud/service"
 	"project/pkg/logger"
+	"project/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,17 +16,12 @@ func init() {
 	service = srv.GetService()
 }
 
-type Response struct {
-	Code    int    // 状态码
-	Message string // 消息
-}
-
 func GetList(c *gin.Context) {
 	var body model.GetListReq
 	err := c.ShouldBind(&body)
 	if err != nil {
 		logger.Sugar.Error("[controller] GetDatas: parse data error: ", err)
-		c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "参数解析出错"})
+		response.BadRequest(c)
 		return
 	}
 
@@ -37,15 +32,15 @@ func GetList(c *gin.Context) {
 	res := service.GetList(body)
 	resp, _ := json.Marshal(res)
 	logger.Sugar.Info("GetDatas （出参）:", string(resp))
-	c.JSON(http.StatusOK, res)
+	response.Success(c, res)
 }
 
 func GetData(c *gin.Context) {
 
 	ID := c.Param("id")
 	if ID == "" {
-		logger.Sugar.Error("[controller] GetData: error: not found param")
-		c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "参数缺失"})
+		logger.Sugar.Error("[controller] GetData: error: Not Found Param")
+		response.BadRequest(c)
 		return
 	}
 
@@ -55,7 +50,7 @@ func GetData(c *gin.Context) {
 	res := service.GetData(ID)
 	resp, _ := json.Marshal(res)
 	logger.Sugar.Info("GetDatas （出参）:", string(resp))
-	c.JSON(http.StatusOK, res)
+	response.Success(c, res)
 }
 
 func AddData(c *gin.Context) {
@@ -63,7 +58,7 @@ func AddData(c *gin.Context) {
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
 		logger.Sugar.Error("[controller] AddData: parse data error: ", err)
-		c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "参数解析出错"})
+		response.BadRequest(c)
 		return
 	}
 
@@ -74,14 +69,14 @@ func AddData(c *gin.Context) {
 	res := service.AddData(body)
 	resp, _ := json.Marshal(res)
 	logger.Sugar.Info("AddData （出参）:", string(resp))
-	c.JSON(http.StatusOK, res)
+	response.Success(c, res)
 }
 
 func DelData(c *gin.Context) {
 	ID := c.Param("id")
 	if ID == "" {
 		logger.Sugar.Error("[controller] DelData: error: not found param")
-		c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "参数缺失"})
+		response.BadRequest(c)
 		return
 	}
 
@@ -91,7 +86,7 @@ func DelData(c *gin.Context) {
 	res := service.DelData(ID)
 	resp, _ := json.Marshal(res)
 	logger.Sugar.Info("DelData （出参）:", string(resp))
-	c.JSON(http.StatusOK, res)
+	response.Success(c, res)
 }
 
 func EditData(c *gin.Context) {
@@ -100,14 +95,14 @@ func EditData(c *gin.Context) {
 	body.ID = c.Param("id")
 	if body.ID == "" {
 		logger.Sugar.Error("[controller] EditData: error: not found param")
-		c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "参数缺失"})
+		response.BadRequest(c)
 		return
 	}
 
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
 		logger.Sugar.Error("[controller] EditData: parse data error: ", err)
-		c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "参数解析出错"})
+		response.BadRequest(c)
 		return
 	}
 
@@ -118,5 +113,5 @@ func EditData(c *gin.Context) {
 	res := service.EditData(body)
 	resp, _ := json.Marshal(res)
 	logger.Sugar.Info("EditData （出参）:", string(resp))
-	c.JSON(http.StatusOK, res)
+	response.Success(c, res)
 }

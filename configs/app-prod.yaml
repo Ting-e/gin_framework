@@ -2,8 +2,15 @@
 server:
   name: Test-server
   port: 8080
-  version: "v1.0.21"
+  version: "v1.0.22"
   environment: "Production"
+
+# JWT 配置
+jwt:
+  secret: "your-256-bit-secret-key-change-in-production"  # 生产环境必须更换
+  issuer: "Test-server"
+  expires_hours: 2           # 访问令牌有效期（小时）
+  refresh_expires_days: 7    # 刷新令牌有效期（天）
 
 # 数据库配置
 db:

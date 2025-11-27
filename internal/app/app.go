@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"project/pkg/database"
-	"project/pkg/queue"
-
+	"project/internal/middleware"
 	"project/pkg/config"
+	"project/pkg/database"
 	"project/pkg/logger"
+	"project/pkg/queue"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,6 @@ type DefaultApp struct {
 
 // InitApp 初始化应用
 func InitApp() (App, error) {
-
 	// 加载配置路径和日志路径
 	opts := LoadConfig()
 
@@ -57,7 +56,6 @@ func InitApp() (App, error) {
 	// 验证日志目录
 	if _, err := os.Stat(opts.LogPath); err != nil {
 		if os.IsNotExist(err) {
-			// 尝试创建日志目录
 			if err := os.MkdirAll(opts.LogPath, 0755); err != nil {
 				return nil, fmt.Errorf("failed to create log directory: %w", err)
 			}
@@ -113,19 +111,13 @@ func (d *DefaultApp) GetRouter() *gin.Engine {
 		return d.router
 	}
 
-	// // 根据配置设置 Gin 模式
-	// if config.Get().Log.Level == "debug" {
-	// 	gin.SetMode(gin.DebugMode)
-	// } else {
+	// 设置 Gin 模式
 	gin.SetMode(gin.ReleaseMode)
-	// }
 
 	d.router = gin.New()
 
-	// 添加中间件
-	d.router.Use(gin.Recovery())
-	d.router.Use(d.loggerMiddleware())
-	d.router.Use(d.corsMiddleware())
+	// 注册中间件
+	middleware.RegisterDefaultMiddlewares(d.router, d.version)
 
 	// 设置信任的代理
 	if err := d.router.SetTrustedProxies(nil); err != nil {
@@ -142,57 +134,6 @@ func (d *DefaultApp) GetRouter() *gin.Engine {
 	})
 
 	return d.router
-}
-
-// loggerMiddleware 日志中间件
-func (d *DefaultApp) loggerMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		start := time.Now()
-		path := c.Request.URL.Path
-		query := c.Request.URL.RawQuery
-
-		c.Next()
-
-		latency := time.Since(start)
-		statusCode := c.Writer.Status()
-		method := c.Request.Method
-		clientIP := c.ClientIP()
-
-		if query != "" {
-			path = path + "?" + query
-		}
-
-		logger.Sugar.Infof("[GIN] %s | %3d | %13v | %15s | %-7s %s",
-			time.Now().Format("2006-01-02 15:04:05"),
-			statusCode,
-			latency,
-			clientIP,
-			method,
-			path,
-		)
-	}
-}
-
-// corsMiddleware CORS 中间件
-func (d *DefaultApp) corsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		method := c.Request.Method
-
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
-		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Length, X-CSRF-Token, Token, session, X-Requested-With, Accept, Origin, Host, Connection, Accept-Encoding, Accept-Language, DNT, X-CustomHeader, Keep-Alive, User-Agent, If-Modified-Since, Cache-Control, Content-Type, X-App-Key, X-Jwt, X-Signature, X-Time-Stamp")
-		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type, Expires, Last-Modified, Pragma")
-		c.Header("Access-Control-Max-Age", "172800")
-		c.Header("Access-Control-Allow-Credentials", "true")
-		c.Header("X-Service-Version", d.version)
-
-		if method == http.MethodOptions {
-			c.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-
-		c.Next()
-	}
 }
 
 // LoadComponents 加载组件
@@ -346,27 +287,11 @@ func (d *DefaultApp) Shutdown(ctx context.Context) error {
 	}
 
 	// 关闭数据库连接等资源
-	// TODO: 添加组件清理逻辑
 	for _, comp := range d.components {
 		logger.Sugar.Infof("[app] cleaning up component: %s", comp)
-		// 调用各组件的清理方法（如果有）
+		// TODO: 调用各组件的 Close 方法
 	}
 
 	logger.Sugar.Info("[app] shutdown completed")
 	return nil
-}
-
-// GetVersion 获取版本号
-func (d *DefaultApp) GetVersion() string {
-	return d.version
-}
-
-// GetName 获取应用名称
-func (d *DefaultApp) GetName() string {
-	return d.name
-}
-
-// GetPort 获取端口号
-func (d *DefaultApp) GetPort() int {
-	return d.port
 }
