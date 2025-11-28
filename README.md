@@ -386,7 +386,7 @@ func (s *AuthService) Login(username, password string) (string, error) {
 func (r *UserRepository) GetByUsername(username string) (*User, error) {
     var user User
     err := r.db.QueryRow(
-        "SELECT id, username, password_hash, role FROM users WHERE username = ?",
+        "SELECT id, username, password_hash, role FROM user WHERE username = ?",
         username,
     ).Scan(&user.ID, &user.Username, &user.PasswordHash, &user.Role)
     return &user, err
@@ -423,10 +423,10 @@ auth.Use(middleware.JWTAuth())
 }
 
 // 特定路由中间件
-r.GET("/admin/users", 
+r.GET("/admin/user", 
     middleware.JWTAuth(),
     middleware.RequireRole("admin"),
-    handler.GetUsers,
+    handler.Getuser,
 )
 ```
 
@@ -445,10 +445,10 @@ import "project/pkg/database"
 db := database.GetMysql().GetDB()
 
 // 查询
-rows, err := db.Query("SELECT * FROM users WHERE id = ?", userID)
+rows, err := db.Query("SELECT * FROM user WHERE id = ?", userID)
 
 // 插入
-result, err := db.Exec("INSERT INTO users (username) VALUES (?)", username)
+result, err := db.Exec("INSERT INTO user (username) VALUES (?)", username)
 ```
 
 #### GORM
@@ -669,7 +669,7 @@ func (r *UserRepository) Create(user *User) error {
 #### 3. 业务逻辑层 (internal/service/)
 
 ```go
-func (s *UserService) CreateUser(req *CreateUserRequest) error {
+func (s *userervice) CreateUser(req *CreateUserRequest) error {
     user := &User{
         Username: req.Username,
         Password: HashPassword(req.Password),
@@ -688,7 +688,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
         return
     }
     
-    if err := h.userService.CreateUser(&req); err != nil {
+    if err := h.userervice.CreateUser(&req); err != nil {
         response.ServerError(c, err.Error())
         return
     }
@@ -702,7 +702,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 ```go
 func RegisterRoutes(r *gin.Engine) {
     api := r.Group("/api")
-    api.POST("/users", handler.CreateUser)
+    api.POST("/user", handler.CreateUser)
 }
 ```
 
